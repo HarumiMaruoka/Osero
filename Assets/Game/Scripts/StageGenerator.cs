@@ -2,33 +2,36 @@
 using System;
 using UnityEngine;
 
-public class ClickableGenerator : MonoBehaviour
+public class StageGenerator : MonoBehaviour
 {
     [SerializeField]
     private TextAsset _stageData = default;
     [SerializeField]
     private float _objectSpacing = 1f;
     [SerializeField]
-    private InGameSystem_Interpersonal _system = default;
+    private InterpersonalGameSystem _system = default;
     [SerializeField]
-    private ClickableObj _clickablePrefab = default;
+    private Cell _clickablePrefab = default;
     [SerializeField]
-    private Vector3 _offset = default;
+    private Vector3 _generatePositionOffset = default;
 
-    public Action OnComplete = default;
+    public Action OnGenerated = default;
 
-    public ClickableObj[][] Generate()
+    [SerializeField]
+    private string _restoreData;
+
+    public Cell[][] Generate()
     {
         var line = _stageData.text.Split('\n');
         for (int i = 0; i < line.Length; i++)
         {
             line[i] = line[i].TrimEnd('\r', '\n');
         }
-        var result = new ClickableObj[line.Length][];
+        var result = new Cell[line.Length][];
 
         for (int y = 0; y < result.Length; y++)
         {
-            result[y] = new ClickableObj[line[y].Length];
+            result[y] = new Cell[line[y].Length];
 
             for (int x = 0; x < result[y].Length; x++)
             {
@@ -36,22 +39,22 @@ public class ClickableGenerator : MonoBehaviour
                 if (line[y][x] < '0' || line[y][x] > '2') continue;
 
                 var clickable = Instantiate(_clickablePrefab,
-                    new Vector3(x * _objectSpacing + _offset.x,
-                                _offset.y,
-                                y * _objectSpacing + _offset.z),
+                    new Vector3(x * _objectSpacing + _generatePositionOffset.x,
+                                _generatePositionOffset.y,
+                                y * _objectSpacing + _generatePositionOffset.z),
                     Quaternion.identity, transform);
 
-                clickable.SetPos(new Vector2Int(x, y));
+                clickable.SetPosition(new Vector2Int(x, y));
                 clickable.SetSystem(_system);
                 result[y][x] = clickable;
 
                 if (line[y][x] == '1')
                 {
-                    OnComplete += result[y][x].OnBlack;
+                    OnGenerated += result[y][x].OnBlack;
                 }
                 else if (line[y][x] == '2')
                 {
-                    OnComplete += result[y][x].OnWhite;
+                    OnGenerated += result[y][x].OnWhite;
                 }
             }
         }
